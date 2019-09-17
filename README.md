@@ -18,5 +18,9 @@
 1. 新建**webpack.config.js**文件，加入基础配置项目，进行 JS 打包
 2. 在项目文件下执行`webpack`命令，即可以看到生成的打包文件在 dist 文件夹下
 
+## 三、使用 webpack-dev-server 打造开发环境
 
-
+1. 项目文件夹下执行`npm install webpack-dev-server --save-dev`安装环境
+2. 执行`npm install -g webpack-dev-server`安装命令环境
+3. 项目文件夹下执行`webpack-dev-server`即可通过访问*127.0.0.1:8080*（默认端口为 8080，可以通过 --port 参数进行修改）访问当前文件夹
+4. 新版的 webpack-dev-server 自带热更新，任何修改都会导致服务重启
