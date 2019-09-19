@@ -1,0 +1,1 @@
+{"version":3,"sources":["webpack:///./src/js/myModule.js"],"names":["module","exports","wow"],"mappings":"yEAAAA,EAAOC,QAAU,CACfC,IAAK","file":"2.81ba1701.js","sourcesContent":["module.exports = {\r\n  wow: 'test'\r\n}"],"sourceRoot":""}

@@ -87,6 +87,34 @@ Webpack 通过入口文件开始，通过引用关系（require、import）挨�
 
 #### 4.2 产生 Chunk 的多种方式
 
+1. 通过 entry 配置
+
+   entry 配置项可以接收三种值（以下讨论情况不涉及代码分割）：
+
+   - 字符串，这种情况下只会产生一个 Chunk
+
+   - 数组，如`entry: ['./src/js/main.js', './src/js/other.js']`，这种情况下也只会生成一个Chunk
+
+   - 对象，如上面的示例代码。
+
+     这种情况下对象中的一个字段就会产生一个 Chunk ，**所以在这种情况下 output 中的 filename 不可直接写死，否则会报错**。因为产生了两个 Bundle 一个名称必然不够用，需要用 [name] 变量来作为生成 Bundle 们的名称。
+
+     而 entry 对象中的 key，也会被用来当作它对应的 Chunk 的名称。
+
+2. 异步产生 Chunk
+
+   除了入口文件会影响以外，异步加载的模块也需要生成 Chunk
+
+   ```javascript
+   // test.js
+   import('./myModule')
+   module.exports = {
+     hi: 123
+   }
+   ```
+
+   
+
 #### 4.3 Chunk 和 Bundle 概念异同
 
 Bundle 是我们最终输出的一个或多个文件（简单来说就是最后生成的文件数量），它的概念与 Chunk 不同。大多数情况下，一个 Chunk 会生成一个 Bundle，但也有不是一对一的情况，比如说下面这样的配置：
