@@ -9,8 +9,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, 'dist'), // 打包输出目录
-    publicPath: '/static/build/', // webpack-dev-server访问的路径
-    filename: '[name].js', // 输出文件名
-    chunkFilename: 'bundle-[id].js' // 输出chunk文件名
-  }
+    filename: '[name].[hash:8].js', // 输出文件名
+  },
+  devtool: 'source-map'
 }

@@ -5,6 +5,9 @@
 > - [Webpack从入门到上线](https://www.cnblogs.com/yincheng/p/webpack.html)
 > - [基于 Webpack4 搭建 Vue 开发环境](https://juejin.im/post/5bc30d5fe51d450ea1328877)
 > - [Webpack中文文档](https://webpack.docschina.org/concepts/)
+> - [Webpack 4 配置最佳实践](https://juejin.im/post/5b304f1f51882574c72f19b0)
+> - [带你走进webpack世界](https://juejin.im/post/5ac9dc9af265da23884d5543)
+> - [Webpack 理解 Chunk](https://juejin.im/post/5d2b300de51d45775b419c76)
 
 ## 一、安装
 
@@ -24,3 +27,83 @@
 2. 执行`npm install -g webpack-dev-server`安装命令环境
 3. 项目文件夹下执行`webpack-dev-server`即可通过访问*127.0.0.1:8080*（默认端口为 8080，可以通过 --port 参数进行修改）访问当前文件夹
 4. 新版的 webpack-dev-server 自带热更新，任何修改都会导致服务重启
+
+## 四、Webpack 4 配置初解
+
+前三步完成后，一个基础的 Webpack 项目就可以说已经搭起来了，接下来，我们以当前的 webpack.config.js 为例，介绍一个基础的配置文件中包含了什么。
+
+```javascript
+const path = require('path')
+
+module.exports = {
+  // The standard entry point and output config
+  // 每个页面的js文件
+  entry: {
+    home: './src/js/home',
+    detail: './src/js/detail'
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist'), // 打包输出目录
+    filename: '[name].[hash:8].js', // 输出文件名
+  }
+}
+```
+
+- entry 项代表入口，webpack 会从该项开始找文件开始解析并打包，每一个子项都会产生一个**chunk**（代码块），chunk 的名字就是每一项的 key 值。
+- output 代表的是输出文件的配置，其中 path 代表了打包的输出目录，filename 则是输出文件的名字，其中 [name] 指的是 **chunk** 的名字，[hash:8] 表示根据当前版本生成的 hash 码的前八位。
+
+### 4.1 Chunk
+
+上面的配置项反复提到了一个词**Chunk**，代码块。这个概念是入门 Webpack 的一个重要概念。
+
+**Chunk 是 WebPack 打包过程中，一堆 module 的集合**。
+
+什么是 module 呢？Webpack 在打包所有文件时，其实都会根据**文件后缀名**把文件视为分为个个 module ，比如 css 文件就属于 CSS Module，这也就是为什么 webpack 中有一个 module 选项，可以配置 rules 用于决定哪个 module 应用哪种 loader。
+
+```javascript
+// config
+{
+    module: {
+        rules: [
+          {
+            test: /\.css$/,
+            use: [
+              {
+                loader: "style-loader"
+              }, {
+                loader: "css-loader"
+              }
+            ]
+          },
+          // ...
+        ]
+      }
+}
+```
+
+Webpack 通过入口文件开始，通过引用关系（require、import）挨个打包模块，最终形成的就是 Chunk。
+
+如果我们有多个入口文件，就会有可能形成多个 Chunk，除了 entry 可以形成多个 chunk 以外，还有其余的两种途径。
+
+#### 4.2 产生 Chunk 的多种方式
+
+#### 4.3 Chunk 和 Bundle 概念异同
+
+Bundle 是我们最终输出的一个或多个文件（简单来说就是最后生成的文件数量），它的概念与 Chunk 不同。大多数情况下，一个 Chunk 会生成一个 Bundle，但也有不是一对一的情况，比如说下面这样的配置：
+
+```javascript
+{
+     entry: {
+    	main: __dirname + "/app/main.js",
+     },
+     output: {
+        path: __dirname + "/public",//打包后的文件存放的地方
+        filename: "[name].js", //打包后输出文件的文件名
+      },
+     devtool: 'source-map'
+}
+```
+
+这种情况下只会产生一个Chunk，但是会产生两个Bundle。
+
+可以说，Chunk是过程中的代码块，Bundle是结果的代码块。
