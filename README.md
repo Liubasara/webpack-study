@@ -113,7 +113,61 @@ Webpack 通过入口文件开始，通过引用关系（require、import）挨�
    }
    ```
 
+3. 代码分割产生 Chunk
+
+   请问以下的配置文件会产生多少个Chunk？
+
+   ```javascript
+   const path = require('path')
    
+   module.exports = {
+     // The standard entry point and output config
+     // 每个页面的js文件
+     entry: {
+       home: './src/js/home',
+       detail: './src/js/detail'
+     },
+     output: {
+       path: path.resolve(__dirname, 'dist'), // 打包输出目录
+       filename: '[name].[hash:8].js', // 输出文件名
+       chunkFilename: '[name].chunkkk.js',
+     },
+     optimization: {
+       runtimeChunk: 'single',
+       splitChunks: {
+         cacheGroups: {
+           commons: {
+             chunks: 'initial',
+             minChunks: 2,
+             maxInitialRequests: 5,
+             minSize: 0
+           }
+         }
+       }
+     }
+   }
+   ```
+
+   ```javascript
+   // home.js
+   var test = require('./test')
+   var myModule = require('./myModule')
+   
+   console.log(test)
+   console.log(myModule)
+   ```
+
+   ```javascript
+   // detail.js
+   var test = require('./test')
+   console.log(test)
+   ```
+
+   答案是 4 个。
+
+   ![webpackSplitChunk.jpg](./study-images/webpackSplitChunk.jpg)
+
+   其中两个入口文件 home.js 和 detail.js 分别产生一个， runtimeChunk: "single" 会将Webpack在浏览器端运行时需要的代码单独抽离到一个文件，commons 下的配置会产生一个 Chunk，一共是 4 个。
 
 #### 4.3 Chunk 和 Bundle 概念异同
 

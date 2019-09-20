@@ -1,5 +1,3 @@
-import('./myModule')
-
 module.exports = {
-  hi: 123
+  wow: 'test'
 }
