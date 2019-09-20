@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "clean-webpack-plugin": "^3.0.0",
+    "html-webpack-plugin": "^4.0.0-beta.8",
     "webpack": "^4.40.2",
     "webpack-cli": "^3.3.9",
     "webpack-dev-server": "^3.8.1"

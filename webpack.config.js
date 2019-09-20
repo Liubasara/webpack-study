@@ -1,5 +1,6 @@
 const path = require('path')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
 
 module.exports = {
   // The standard entry point and output config
@@ -14,6 +15,26 @@ module.exports = {
     chunkFilename: '[name].chunkkk.js'
   },
   plugins: [
-    new CleanWebpackPlugin()
+    new CleanWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      template: './src/html/home.html',
+      filename: 'home.html',
+      title: 'home',
+      chunks: ['home'],
+      hash: true,
+      minify: {
+        removeAttributeQuotes: true
+      }
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/html/detail.html',
+      filename: 'detail.html',
+      title: 'detail',
+      chunks: ['detail'],
+      hash: true,
+      minify: {
+        removeAttributeQuotes: true
+      }
+    })
   ]
 }

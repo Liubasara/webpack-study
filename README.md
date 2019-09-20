@@ -192,15 +192,90 @@ Bundle 是我们最终输出的一个或多个文件（简单来说就是最后�
 
 ## 五、打包除了 JS 以外的文件
 
-// TODO
+直到上一个 Tag 为止，我们在做的一直都是 JS 的打包，而 Webpack 能做的显然不止于此。通过 Webpack 的插件配置，我们能为 Webpack 添加更多支持的打包类型。
 
+### 5.1 打包html
 
+引入 [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) 用于实现这一目标。
+
+```shell
+npm install html-webpack-plugin@next --save-dev
+```
+
+该插件可以给每一个chunk生成html,指定一个`template`,可以接收参数，在模板里面使用。
+
+随后在 webpack.config.js 中引入，执行`npm run build`，该插件就会最终生成一个引用了所有 JS 文件和 CSS 文件的 index.html 了。
+
+```javascript
+// webpack.config.js
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+{
+    plugins: [
+        new HtmlWebpackPlugin()
+    ]
+}
+```
+
+我们还可以传入更多参数来进行自定义定制：
+
+```javascript
+// webpack.config.js
+const path = require('path')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = {
+  // The standard entry point and output config
+  // 每个页面的js文件
+  entry: {
+    home: './src/js/home',
+    detail: './src/js/detail'
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist'), // 打包输出目录
+    filename: '[name].[hash:8].js', // 输出文件名
+    chunkFilename: '[name].chunkkk.js'
+  },
+  plugins: [
+    new CleanWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      template: './src/html/home.html',
+      filename: 'home.html',
+      title: 'home',
+      chunks: ['home'],
+      hash: true,
+      minify: {
+        removeAttributeQuotes: true
+      }
+    }),
+    new HtmlWebpackPlugin({
+      template: './src/html/detail.html',
+      filename: 'detail.html',
+      title: 'detail',
+      chunks: ['detail'],
+      hash: true,
+      minify: {
+        removeAttributeQuotes: true
+      }
+    })
+  ]
+}
+```
+
+在webpack中，插件的引入顺序没有规定，上面的例子中我们引入了两个 html 模板，且每个 html 都有自己所属的 Chunk 包，打包配置含义如下：
+
+- template: html 模板的路径地址
+- filename: 生成的文件名
+- title：传入的参数
+- chunks：html 文件所需要引入的 chunk，这里传入的是一个由 chunk 的 key 值组成的数组，chunk 的 key 值正如上文所述就是 entry 选项中对象的 key 值。
+- hash：在引入的 JS 里面加入 hash 值，用于区分版本避免缓存后无法更新，比如`<script src="detail.4f7295dc.js?4f7295dc91c265ce0b3d"></script>`这种形式
+- removeAttributeQuotes：去掉引号，减小文件大小
 
 ## 额外优化
 
 - **每次打包前先清空 dist 目录**
 
-  使用 clean-webpack-plugin 可以方便的实现这一目标。
+  使用 [clean-webpack-plugin](https://github.com/johnagan/clean-webpack-plugin) 可以方便的实现这一目标。
 
   安装：`npm install --save-dev clean-webpack-plugin`
 
