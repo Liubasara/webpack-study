@@ -2,12 +2,12 @@
 
 > 推荐资料：
 >
-> - [Webpack从入门到上线](https://www.cnblogs.com/yincheng/p/webpack.html)
-> - [基于 Webpack4 搭建 Vue 开发环境](https://juejin.im/post/5bc30d5fe51d450ea1328877)
 > - [Webpack中文文档](https://webpack.docschina.org/concepts/)
+> - [Webpack从入门到上线](https://www.cnblogs.com/yincheng/p/webpack.html)
 > - [Webpack 4 配置最佳实践](https://juejin.im/post/5b304f1f51882574c72f19b0)
-> - [带你走进webpack世界](https://juejin.im/post/5ac9dc9af265da23884d5543)
+> - [带你走进webpack世界(READING)](https://juejin.im/post/5ac9dc9af265da23884d5543)
 > - [Webpack 理解 Chunk](https://juejin.im/post/5d2b300de51d45775b419c76)
+> - [webpack build后生成的app、vendor、manifest三者有何职能不同？(TOREAD)](https://juejin.im/post/5c17b9805188251e663ec239)
 
 ## 一、安装
 
@@ -189,3 +189,32 @@ Bundle 是我们最终输出的一个或多个文件（简单来说就是最后�
 这种情况下只会产生一个Chunk，但是会产生两个Bundle。
 
 可以说，Chunk是过程中的代码块，Bundle是结果的代码块。
+
+## 五、打包除了 JS 以外的文件
+
+// TODO
+
+
+
+## 额外优化
+
+- **每次打包前先清空 dist 目录**
+
+  使用 clean-webpack-plugin 可以方便的实现这一目标。
+
+  安装：`npm install --save-dev clean-webpack-plugin`
+
+  在 webpack.config.js 中加入下面代码
+
+  ```javascript
+  {
+      plugins: [
+          new CleanWebpackPlugin()
+      ]
+  }
+  ```
+
+  > By default, this plugin will remove all files inside webpack's `output.path` directory, as well as all unused webpack assets after every successful rebuild
+  >
+  > 默认情况下，这个插件会在每次构建前移除 webpack 选项中，output.path 目录下的所有文件，即使是所有没有用到的静态文件也是如此。
+
