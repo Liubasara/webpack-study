@@ -271,6 +271,135 @@ module.exports = {
 - hash：在引入的 JS 里面加入 hash 值，用于区分版本避免缓存后无法更新，比如`<script src="detail.4f7295dc.js?4f7295dc91c265ce0b3d"></script>`这种形式
 - removeAttributeQuotes：去掉引号，减小文件大小
 
+### 5.2 打包 CSS
+
+要让 webpack 在打包 JS 的时候同时打包 CSS，首先要让 webpack 能够识别到 CSS，否则就会像下面这样报错。
+
+```javascript
+// home.js
+var test = require('./test')
+var myModule = require('./myModule')
+var css = require('../css/home.css') // 通过 require 引入 CSS
+
+console.log(test)
+console.log(myModule)
+```
+
+![webpackCssBundleErr.jpg](./study-images/webpackCssBundleErr.jpg)
+
+安装 css-loader 拓展即可让 webpack 在打包时识别到 css 文件。安装 style-loader 可以让 Webpack 将引入的 CSS 加上 style 标签用 JS 自动生成在页面里。
+
+```shell
+# 执行安装
+npm install css-loader style-loader --save-dev
+```
+
+```javascript
+// webpack.config.js
+const path = require('path')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = {
+  // The standard entry point and output config
+  // 每个页面的js文件
+  entry: {
+    home: './src/js/home',
+    detail: './src/js/detail'
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist'), // 打包输出目录
+    filename: '[name].[hash:8].js', // 输出文件名
+    chunkFilename: '[name].chunkkk.js'
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ['css-loader', 'style-loader'], // 被引入的 loader 会从右至左顺序执行，css-loader 用于支持 css 中的引入 , style-loader 用于 JS 把 css 写入 style 内嵌标签动态创建
+        exclude: /node_modules/
+      }
+    ]
+  },
+  plugins: [
+    new CleanWebpackPlugin()
+  ]
+}
+```
+
+当然，如果你想使用 stylus、scss 等编译型 CSS 语言，也可以引入相应的 loader ，比如 scss 类型的文件就可以引入下面类型的 loader。
+
+```shell
+npm install css-loader style-loader sass-loader node-sass -D
+```
+
+其中 node-sass 是 sass-loader 的依赖。
+
+```javascript
+module: {
+    rules: [
+      {
+        test: /\.scss$/,
+        use: ['style-loader', 'css-loader', 'sass-loader'], // 被引入的 loader 会从右至左顺序执行，css-loader 用于支持 css 中的引入 , style-loader 用于 JS 把 css 写入 style 内嵌标签动态创建
+        exclude: /node_modules/
+      }
+    ]
+  }
+```
+
+如果要把 css 作为一个单独的文件，需要用到一个插件：
+
+```shell
+npm i extract-text-webpack-plugin@next --save-dev
+```
+
+```javascript
+// webpack.config.js
+const path = require('path')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const ExtractTextPlugin = require('extract-text-webpack-plugin')
+
+module.exports = {
+  // The standard entry point and output config
+  // 每个页面的js文件
+  entry: {
+    home: './src/js/home',
+    detail: './src/js/detail'
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist'), // 打包输出目录
+    filename: '[name].[hash:8].js', // 输出文件名
+    chunkFilename: '[name].chunkkk.js'
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ExtractTextPlugin.extract({
+          // style-loader 把 css 文件中的数据写入到 html 中的 style 标签
+          fallback: 'style-loader',
+          use: ['css-loader']
+        }),
+        exclude: /node_modules/
+      }
+    ]
+  },
+  plugins: [
+    new CleanWebpackPlugin(),
+    new ExtractTextPlugin('[name].[hash:8].css')
+  ]
+}
+```
+
+插件配置
+
+- name: chunk 的名字
+- hash: 8 根据内容生成 hash 值取前 8 位
+- 修改 loader 配置下的 use，fallback 指兼容方案
+
+
+
 ## 额外优化
 
 - **每次打包前先清空 dist 目录**

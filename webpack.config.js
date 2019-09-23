@@ -1,6 +1,7 @@
 const path = require('path')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
+const ExtractTextPlugin = require('extract-text-webpack-plugin')
 
 module.exports = {
   // The standard entry point and output config
@@ -14,27 +15,21 @@ module.exports = {
     filename: '[name].[hash:8].js', // 输出文件名
     chunkFilename: '[name].chunkkk.js'
   },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ExtractTextPlugin.extract({
+          // style-loader 把 css 文件中的数据写入到 html 中的 style 标签
+          fallback: 'style-loader',
+          use: ['css-loader']
+        }),
+        exclude: /node_modules/
+      }
+    ]
+  },
   plugins: [
     new CleanWebpackPlugin(),
-    new HtmlWebpackPlugin({
-      template: './src/html/home.html',
-      filename: 'home.html',
-      title: 'home',
-      chunks: ['home'],
-      hash: true,
-      minify: {
-        removeAttributeQuotes: true
-      }
-    }),
-    new HtmlWebpackPlugin({
-      template: './src/html/detail.html',
-      filename: 'detail.html',
-      title: 'detail',
-      chunks: ['detail'],
-      hash: true,
-      minify: {
-        removeAttributeQuotes: true
-      }
-    })
+    new ExtractTextPlugin('[name].[hash:8].css')
   ]
 }
