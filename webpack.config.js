@@ -2,6 +2,7 @@ const path = require('path')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const ExtractTextPlugin = require('extract-text-webpack-plugin')
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
 
 module.exports = {
   // The standard entry point and output config
@@ -14,6 +15,18 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'), // 打包输出目录
     filename: '[name].[hash:8].js', // 输出文件名
     chunkFilename: '[name].chunkkk.js'
+  },
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        vendors: {
+          chunks: 'initial',
+          minChunks: 2,
+          minSize: 1,
+          priority: 1
+        }
+      }
+    }
   },
   module: {
     rules: [
@@ -30,6 +43,7 @@ module.exports = {
   },
   plugins: [
     new CleanWebpackPlugin(),
+    new BundleAnalyzerPlugin(),
     new ExtractTextPlugin('[name].[hash:8].css')
   ]
 }

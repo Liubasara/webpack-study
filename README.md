@@ -8,6 +8,7 @@
 > - [带你走进webpack世界(READING)](https://juejin.im/post/5ac9dc9af265da23884d5543)
 > - [Webpack 理解 Chunk](https://juejin.im/post/5d2b300de51d45775b419c76)
 > - [webpack build后生成的app、vendor、manifest三者有何职能不同？(TOREAD)](https://juejin.im/post/5c17b9805188251e663ec239)
+> - [[译]Webpack 4 — 神秘的SplitChunksc插件](https://juejin.im/post/5b45abde51882519ba0044d0)
 
 ## 一、安装
 
@@ -398,6 +399,88 @@ module.exports = {
 - hash: 8 根据内容生成 hash 值取前 8 位
 - 修改 loader 配置下的 use，fallback 指兼容方案
 
+## 六、代码分割
+
+本节要研究的是 webpack 对于代码分割的机制，webpack 可以将多次 import 的文件根据一定的规则打包成一个单独的 JS，用于缩小文件整体大小以及优化加快加载速度。但有时候不当的设置会让 webpack 将文件过度分割，最终导致页面的请求过多，反而拖慢了页面的加载速度（相比于一次性加载一个 1M 的JS文件，发起 1024 次网络请求加载 1024 个 1K 的 JS 文件显然更浪费时间和资源）。因此，理解 webpack 对于代码分割的处理显得至关重要。
+
+### 6.1 使用插件分析打包模块
+
+分析代码分割之前首先要有合适的分析工具，**webpack-bundle-analyzer** 插件可以将打包的模块形成可视化缩放树形图。
+
+下面是使用方法：
+
+- 使用 npm 执行安装命令（该插件可能需要管理员权限）
+
+  ```shell
+  npm install --save-dev webpack-bundle-analyzer
+  ```
+
+- 加入plugin
+
+  ```javascript
+  // webpack.config.js
+  const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+  {
+      plugins: [
+          new BundleAnalyzerPlugin()
+      ]
+  }
+  ```
+
+- 此后执行`npm run build --report`后访问`127.0.0.1:8888`即可看到打包后的包分析界面
+
+### 6.2 代码分割配置详解
+
+webpack 4 舍弃了之前在 webpack 3 中使用的 webpack.optimize.CommonsChunkPlugin，增加了 optimization.splitChunks 配置项用于替代。
+
+```javascript
+// 配置模板
+module.exports = {
+  //...
+  optimization: {
+    splitChunks: {
+      // chunks：表示从哪些chunks里面抽取代码，除了三个可选字符串值 initial、async、all 之外，还可以通过函数来过滤所需的 chunks
+      chunks: 'async',
+      // 表示抽取出来的文件在压缩前的最小大小，默认为 30000
+      minSize: 30000,
+      // 表示抽取出来的文件在压缩前的最大大小，默认为 0，表示不限制最大大小
+      maxSize: 0,
+      // 表示被引用次数，默认为1
+      minChunks: 1,
+      // 最大的按需(异步)加载次数，默认为 5
+      maxAsyncRequests: 5,
+      // 最大的初始化加载次数，默认为 3
+      maxInitialRequests: 3,
+      // 抽取出来的文件的自动生成名字的分割符，默认为 ~
+      automaticNameDelimiter: '~',
+      // 抽取出来文件的名字，默认为 true，表示自动生成文件名
+      name: true, 
+      // 缓存组，继承了上述的一切属性
+      cacheGroups: {
+        vendors: {
+          // 表示要过滤 modules，默认为所有的 modules，可匹配模块路径或 chunk 名字，当匹配的是 chunk 名字的时候，其里面的所有 modules 都会选中
+          test: /[\\/]node_modules[\\/]/,
+          // 表示抽取权重，数字越大表示优先级越高。因为一个 module 可能会满足多个 cacheGroups 的条件，那么抽取到哪个就由权重最高的说了算
+          priority: -10
+        },
+        default: {
+          minChunks: 2,
+          priority: -20,
+          // 表示是否使用已有的 chunk，如果为 true 则表示如果当前的 chunk 包含的模块已经被抽取出去了，那么将不会重新生成新的。
+          reuseExistingChunk: true
+        }
+      }
+    }
+  }
+}
+```
+
+上面的各组参数中，最重要的是 **cacheGroups**，不仅继承了父选项的一切属性，还额外提供了 test、priority、reuseExistingChunk 三个选项用于过滤。
+
+**在分割配置中，chunks 选项提供了三种不同的打包模式，分别是 async, initial 及 all，代表了三种分割代码的主要逻辑**。
+
+#### 6.2.3 三种不同的分割逻辑
+
 
 
 ## 额外优化
@@ -422,3 +505,12 @@ module.exports = {
   >
   > 默认情况下，这个插件会在每次构建前移除 webpack 选项中，output.path 目录下的所有文件，即使是所有没有用到的静态文件也是如此。
 
+  
+
+- **url-loader 转换图片**
+
+  该插件依赖于 file-loader ，用于把图片转换为 base64 嵌入 html，,如果超出一定阈值则交给 file-loader。
+
+- **babel-loader 转化代码**
+
+  使用 babel-loader 转换代码，由此让高版本代码获得更强的兼容性。
