@@ -1,3 +1,3 @@
 var test = require('./test')
-
-console.log(test)
+var myModule = require('./myModule')
+import('./test2')

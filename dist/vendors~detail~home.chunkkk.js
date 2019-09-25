@@ -1,1 +1,1 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[0],[,function(n,o,w){w.e(3).then(w.t.bind(null,0,7)),n.exports={hi:123},n.exports={wow:"test"}}]]);
+(window.webpackJsonp=window.webpackJsonp||[]).push([[0],[function(w,o){w.exports={wow:"test"}}]]);

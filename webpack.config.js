@@ -20,7 +20,7 @@ module.exports = {
     splitChunks: {
       cacheGroups: {
         vendors: {
-          chunks: 'initial',
+          chunks: 'all',
           minChunks: 2,
           minSize: 1,
           priority: 1

@@ -5,7 +5,8 @@
   "license": "ISC",
   "scripts": {
     "dev": "webpack-dev-server",
-    "build": "webpack"
+    "build": "webpack",
+    "report": "webpack --report"
   },
   "devDependencies": {
     "clean-webpack-plugin": "^3.0.0",
