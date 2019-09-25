@@ -481,7 +481,107 @@ module.exports = {
 
 #### 6.2.3 三种不同的分割逻辑
 
+配置文件如下所示：
 
+```javascript
+const path = require('path')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const ExtractTextPlugin = require('extract-text-webpack-plugin')
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin
+
+module.exports = {
+  // The standard entry point and output config
+  // 每个页面的js文件
+  entry: {
+    home: './src/js/home',
+    detail: './src/js/detail'
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist'), // 打包输出目录
+    filename: '[name].[hash:8].js', // 输出文件名
+    chunkFilename: '[name].chunkkk.js'
+  },
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        vendors: {
+          chunks: 'async',
+          minChunks: 2,
+          minSize: 1,
+          priority: 1
+        }
+      }
+    }
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ExtractTextPlugin.extract({
+          // style-loader 把 css 文件中的数据写入到 html 中的 style 标签
+          fallback: 'style-loader',
+          use: ['css-loader']
+        }),
+        exclude: /node_modules/
+      }
+    ]
+  },
+  plugins: [
+    new CleanWebpackPlugin(),
+    new BundleAnalyzerPlugin(),
+    new ExtractTextPlugin('[name].[hash:8].css')
+  ]
+}
+
+// home.js
+import('./test')
+var myModule = require('./myModule')
+import('./test2')
+
+// detail.js
+var test = require('./test')
+var myModule = require('./myModule')
+import('./test2')
+```
+
+1. chunks: 'async'
+
+   该模式下，webpack 只会对异步加载的模块进行分割，而不理会静态引入的模块。
+
+   打包效果如下：
+
+   ![asyncSplitReport.png](./study-images/asyncSplitReport.png)
+
+   **可以看到**：
+
+   - webpack 对 home.js 和 detail.js 中都进行了异步引入的 test2.js 进行了分离打包
+   - webpack 对 home.js 中进行了异步调用的 test.js 进行了分离打包（**这其实与优化无关，只是单纯因为我们之前提到的异步文件会单独生成一个 chunk 文件**），而对 detail.js 中静态引入的 test.js 则没有分离
+   - webpack 对 home.js 和 detail.js 中都进行了静态引入的 myModule.js 没有进行分离打包
+
+2. chunks: 'initial'
+
+   该模式下 webpack 会关注于静态文件的分离打包。
+
+   ![initialSplitReport.png](./study-images/initialSplitReport.png)
+
+   **可以看到**：
+
+   - 对于 test.js ，由于它的静态引入数小于 minChunks: 2，所以 webpack 并没有对 detail.js 中静态引入的 test.js 进行分离打包。而由于其在 home.js 中异步引入，所以额外为其生成了一个 chunk 文件，test2.js 也是同理。
+   - 由于在 detail.js、home.js 两个文件中都静态引入了 myModule.js，所以 webpack 将其打包成了一个通用 JS 供这两个文件引用
+
+3. chunks: 'all'
+
+   该模式下 webpack 将会对两种引入一视同仁。
+
+   ![allSplitReport.png](./study-images/allSplitReport.png)
+
+   **可以看到**：
+
+   - 在该模式下，webpack 认为 test.js 和 test2.js 的引用数都为 2（尽管它们引入的方式不同），所以将其转到单文件 1.cunkkk.js 和 2.chunkkk.js
+   - myModule.js 依旧被打包进了通用 JS。
+
+**结论**：由于 ChunkFile 的特性，无论处于何种模式下，webpack 都会为异步引入的文件单独生成有且只有一个 bundle，这就使得 async 模式有些鸡肋，几乎只是为了不分割静态引入文件而存在的一种模式。而乍一看 all 模式似乎是能将文件分割得最漂亮的模式，但事实上很容易造成文件过度分割，文件过于碎片化的情况。此时若有一个页面需要加载 detail.js，在 initial 模式下浏览器需要下载 detail.xxxx.js、test2.js、vendors.js 三个文件，而在 all 模式下则需要下载 detail.xxxx.js、test.js、test2.js、vendors.js 四个文件。由此，也不难理解为什么常用的分割模式是 initial 了。
 
 ## 额外优化
 

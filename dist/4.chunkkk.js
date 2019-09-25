@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([[4],{2:function(o,e,n){Promise.resolve().then(n.t.bind(null,0,7)),o.exports={hi:123},o.exports={wow:"test"}}}]);
