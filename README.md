@@ -686,3 +686,62 @@ module.exports = merge(common, {
 ```
 
 这样就完成了最基本的配置分割。
+
+### 7.2 开发环境配置
+
+开发环境中，我们主要关注的有以下几点：
+
+- 实时构建
+- 模块热更新替换
+- 代码映射用于 Debug
+
+webpack-dev-server 的原理是基于 express（一个基于 node 构建的高性能异步服务框架）运行的一个服务器，通过 webpack 中的 devServer 选项对其进行配置。
+
+以下是一个通用的配置文件。
+
+```javascript
+const merge = require('webpack-merge')
+const common = require('./webpack.common.js')
+const webpack = require('webpack')
+
+module.exports = merge(common, {
+  //详情https://www.webpackjs.com/configuration/devtool/
+  devtool: 'inline-cheap-module-source-map',
+  devServer: {
+    contentBase: 'index.html',
+    port: 8080,
+    host: 'localhost',
+    overlay: true,
+    compress: true,
+    open: true,
+    hot: true,
+    inline: true,
+    progress: true
+  },
+  plugins: [
+    //启用热更新配置项
+    new webpack.NamedModulesPlugin(),
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.NoEmitOnErrorsPlugin()
+  ]
+})
+```
+
+其中的选项配置含义如下：
+
+- `contentBase`: 静态文件地址
+- `port`: 端口号
+- `host`: 主机
+- `overlay`: 如果出错，则在浏览器中显示出错误
+- `compress`: 服务器返回浏览器的时候是否启动gzip压缩
+- `open`: 打包完成自动打开浏览器
+- `hot`: 模块热替换 需要`webpack.HotModuleReplacementPlugin`插件
+- `inline`: 实时构建
+- `progress`: 显示打包进度
+- `devtool`: 生成代码映射，查看编译前代码，利于找bug
+- `webpack.NamedModulesPlugin`: 显示模块的相对路径
+
+运行`npm run dev`，试着对 src 文件夹下的 js 文件进行更改，即可看到热更新的效果。
+
+webpack-dev-server 能做的当然不止这些，proxy 代理，cookie 设置、甚至像 mock 数据这样极其便利的功能，只要配置得当，都是可以使用的。
+
