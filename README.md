@@ -10,6 +10,12 @@
 > - [webpack build后生成的app、vendor、manifest三者有何职能不同？(TOREAD)](https://juejin.im/post/5c17b9805188251e663ec239)
 > - [[译]Webpack 4 — 神秘的SplitChunksc插件](https://juejin.im/post/5b45abde51882519ba0044d0)
 
+---
+
+第一部分 基础学习
+
+---
+
 ## 一、安装
 
 1. 确保电脑上安装有 node 环境且 npm 命令可用。
@@ -614,3 +620,69 @@ import('./test2')
 - **babel-loader 转化代码**
 
   使用 babel-loader 转换代码，由此让高版本代码获得更强的兼容性。
+
+---
+
+第二部分 实战练习 手写一个简易 Vue-Cli
+
+---
+
+经过了上面的学习以后，我们已经掌握了 webpack 打包的大部分基础知识，接下来，我们将学习如何将所学的知识真正运用到前端工程当中。
+
+## 七、WebPack 项目基本配置
+
+### 7.1 区分生产开发环境
+
+在 package.json 中的 scripts 项加入如下配置：
+
+```json
+{
+    "scripts": {
+        "dev": "set NODE_ENV=development&&webpack-dev-server --inline --progress --config build/webpack.dev.js",
+    	"build": "set NODE_ENV=production&&webpack --mode=production --config build/webpack.prod.js"
+    }
+}
+```
+
+如上所示，使用`set NODE_ENV=development`来启动 webpack ，可以让我们在代码中通过访问`process.env.NODE_ENV`来判断生产环境还是开发环境。
+
+如上面的配置中，我们需要准备两套不一样的 webpack 配置文件，分别是 webpack.dev.js 用于开发环境和 webpack.prod.js 用于生产环境。
+
+但两套环境并不是完全不同，其中一些公用配置完全可以抽出来，作为一个新的文件 webpack.common.js。使用 webpack 支持的 webpack-merge 插件可以很方便地对配置文件进行合并。
+
+```shell
+npm install --save-dev webpack-merge
+```
+
+在根目录下创建一个 build 文件夹，用于放置这三个配置文件。
+
+```javascript
+const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+
+module.exports = {
+  entry: path.resolve(__dirname, '../src'),
+  output: {
+    path: path.resolve(__dirname, '../dist'), // 打包输出目录
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: path.resolve(__dirname, '../index.html'),
+      minify: {
+        removeAttributeQuotes: true
+      }
+    })
+  ]
+}
+```
+
+```javascript
+// webpack.dev.js && webpack.prod.js
+const merge = require("webpack-merge")
+const common = require('./webpack.common.js')
+
+module.exports = merge(common, {
+})
+```
+
+这样就完成了最基本的配置分割。
