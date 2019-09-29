@@ -1,0 +1,1 @@
+(window.webpackJsonp=window.webpackJsonp||[]).push([["main"],[function(n,w){window.w=123}],[[0,"manifest"]]]);

@@ -3,7 +3,7 @@ const common = require('./webpack.common.js')
 const webpack = require('webpack')
 
 module.exports = merge(common, {
-  //详情https://www.webpackjs.com/configuration/devtool/
+  // 详情https://www.webpackjs.com/configuration/devtool/
   devtool: 'inline-cheap-module-source-map',
   devServer: {
     contentBase: 'index.html',
@@ -17,7 +17,7 @@ module.exports = merge(common, {
     progress: true
   },
   plugins: [
-    //启用热更新配置项
+    // 启用热更新配置项
     new webpack.NamedModulesPlugin(),
     new webpack.HotModuleReplacementPlugin(),
     new webpack.NoEmitOnErrorsPlugin()

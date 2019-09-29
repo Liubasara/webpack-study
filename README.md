@@ -745,3 +745,97 @@ module.exports = merge(common, {
 
 webpack-dev-server 能做的当然不止这些，proxy 代理，cookie 设置、甚至像 mock 数据这样极其便利的功能，只要配置得当，都是可以使用的。
 
+### 7.3 生产环境配置
+
+生产环境的打包我们一般会关注以下几点：
+
+- 代码压缩、混淆
+- 删除开发环境下的特定代码（比如 console、warning 之类的）
+- 打包速度
+- 文件分割
+
+使用 WebpackParallelUglifyPlugin 可以得到代码压缩以及删除代码等功能，且可以并行压缩代码，提升打包效率。
+
+使用`npm install --save-dev webpack-parallel-uglify-plugin`即可进行安装。
+
+其选项配置如下：
+
+<ul>
+<li><code>mangle</code>: 是否混淆代码</li>
+<li><code>output.beautify</code>: 代码压缩成一行 true为不压缩 false压缩</li>
+<li><code>output.comments</code>: 去掉注释</li>
+<li><code>compress.drop_console</code>: 删除console</li>
+<li><code>compress.collapse_vars</code>: 把定义一次的变量，直接使用，取消定义变量</li>
+<li><code>compress.reduce_vars</code>: 合并多次用到的值，定义成变量</li>
+<li><a target="_blank" href="https://link.juejin.im?target=https%3A%2F%2Fwww.npmjs.com%2Fpackage%2Fuglify-js" rel="nofollow noopener noreferrer">具体文档</a></li>
+</ul>
+
+使用 optimization 选项即可对文件分割进行配置，最终的配置文件如下:
+
+```javascript
+// webpack.prod.js
+const merge = require("webpack-merge")
+const common = require('./webpack.common.js')
+const WebpackParallelUglifyPlugin = require('webpack-parallel-uglify-plugin')
+const { CleanWebpackPlugin } = require('clean-webpack-plugin')
+
+module.exports = merge(common, {
+  optimization: {
+    namedChunks: true,
+    runtimeChunk: {
+      name: 'manifest'
+    },
+    //编译错误时不生成
+    noEmitOnErrors: true,
+    splitChunks: {
+      // 默认配置
+      chunks: 'async',
+      minSize: 30000,
+      minChunks: 1,
+      maxAsyncRequests: 5,
+      maxInitialRequests: 3,
+      name: false,
+      cacheGroups: {
+        vendor: {
+          // 覆盖配置
+          name: 'vendor',
+          chunks: 'initial',
+          priority: -10,
+          reuseExistingChunk: false,
+          test: /node_modules\/(.*)\.js/
+        }
+      }
+    }
+  },
+  plugins: [
+    new CleanWebpackPlugin(),
+    new WebpackParallelUglifyPlugin({
+      uglifyJS: {
+        // 是否混淆变量名称
+        mangle: false,
+        output: {
+          // 代码是否压缩为多行，false 为压缩
+          beautify: false,
+          // 是否去掉注释, true 或 'all' 为保留所有注释
+          comments: false
+        },
+        compress: {
+          // 删除 console
+          drop_console: true,
+          // 把定义一次的变量直接使用
+          collapse_vars: true,
+          // 合并多次用到的值，并定义为变量
+          reduce_vars: true
+        }
+      }
+    })
+  ]
+})
+```
+
+
+
+
+
+
+
