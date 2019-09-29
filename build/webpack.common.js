@@ -5,6 +5,7 @@ module.exports = {
   entry: path.resolve(__dirname, '../src'),
   output: {
     path: path.resolve(__dirname, '../dist'), // 打包输出目录
+    filename: 'js/[name].[hash:8].js'
   },
   plugins: [
     new HtmlWebpackPlugin({
