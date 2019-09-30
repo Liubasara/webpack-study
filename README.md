@@ -9,6 +9,7 @@
 > - [Webpack 理解 Chunk](https://juejin.im/post/5d2b300de51d45775b419c76)
 > - [webpack build后生成的app、vendor、manifest三者有何职能不同？(TOREAD)](https://juejin.im/post/5c17b9805188251e663ec239)
 > - [[译]Webpack 4 — 神秘的SplitChunksc插件](https://juejin.im/post/5b45abde51882519ba0044d0)
+> - [webpack踩坑之路 (2)——图片的路径与打包](https://www.cnblogs.com/ghost-xyx/p/5812902.html)
 
 ---
 
@@ -833,7 +834,105 @@ module.exports = merge(common, {
 })
 ```
 
+## 八、资源管理插件-loader
 
+直至上一节为止，该 webpack 项目只能打包一个 index.html 和 js 文件，无法识别 css、图片等资源。在本节中，该项目需要安装各类 loader，进行资源管理。
+
+安装css-loader file-loader url-loader sass-loader node-sass（sass-loader和node-sass配置sass环境，url-loader是基于file-loader，可以进行小图片转换base64）
+
+```shell
+npm install --save-dev style-loader css-loader file-loader url-loader sass-loader node-sass
+```
+
+使用 **postcss-loader** **autoprefixer** 这两个插件可以自动为样式添加前缀，用于浏览器兼容
+
+```shell
+npm install postcss-loader autoprefixer --save-dev
+```
+
+使用 mini-css-extract-plugin 可以抽离样式文件到一个单独文件中(webpack4+版本使用，webpack4以下版本使用extract-text-webpack-plugin)
+
+```shell
+npm install mini-css-extract-plugin  --save-dev 
+```
+
+使用 copy-webpack-plugin 可以将一些不用打包的文件在打包后复制。
+
+```shell
+npm install copy-webpack-plugin --save-dev
+```
+
+文件配置如下：
+
+```javascript
+const path = require('path')
+const HtmlWebpackPlugin = require('html-webpack-plugin')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
+const MiniCssExtractPlugin = require('mini-css-extract-plugin')
+const devMode = process.env.NODE_ENV !== 'production'
+
+module.exports = {
+  entry: path.resolve(__dirname, '../src'),
+  output: {
+    path: path.resolve(__dirname, '../dist'), // 打包输出目录
+    filename: 'js/[name].[hash:8].js'
+  },
+  module: {
+    rules: [
+      {
+        test: /\.(sa|sc|c)ss$/,
+        use: [
+          {
+            loader: MiniCssExtractPlugin.loader,
+            options: {
+              hmr: process.env.NODE_ENV === 'development',
+              reloadAll: true
+            }
+          },
+          'css-loader',
+          'sass-loader',
+          {
+            loader: 'postcss-loader',
+            options: {
+              plugins: [
+                require('autoprefixer')({
+                  overrideBrowserslist: ['ie 9-11', 'last 5 version'] //兼容IE9到11，所有浏览器最近五个版本
+                })
+              ]
+            }
+          }
+        ]
+      },
+      {
+        test: /\.(png|jpg)$/,
+        use: [
+          // loader 后面 limit 字段代表图片打包限制，这个限制并不是说超过了就不能打包，而是指当图片大小小于限制时会自动转成 base64 码引用。上例中大于8192字节的图片正常打包，小于8192字节的图片以 base64 的方式引用
+          // name 字段指定了在打包根目录（output.path）下生成名为 images 的文件夹，并在原图片名前加上8位 hash 值
+          'url-loader?limit=8192&name=images/[name].[hash:8].[ext]'
+        ]
+      }
+    ]
+  },
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: path.resolve(__dirname, '../index.html'),
+      minify: {
+        removeAttributeQuotes: true
+      }
+    }),
+    new MiniCssExtractPlugin({
+      filename: devMode ? 'css/[name].css' : 'css/[name].[hash:8].css',
+      chunkFilename: devMode ? 'css/[id].css' : 'css/[id].[hash:8].css'
+    }),
+    new CopyWebpackPlugin([{
+      from: path.resolve(__dirname, '../public'),
+      to: path.resolve(__dirname, '../dist/static'),
+      ignore: ['.*']
+    }])
+  ]
+}
+
+```
 
 
 
