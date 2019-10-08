@@ -5,11 +5,12 @@
 > - [Webpack中文文档](https://webpack.docschina.org/concepts/)
 > - [Webpack从入门到上线](https://www.cnblogs.com/yincheng/p/webpack.html)
 > - [Webpack 4 配置最佳实践](https://juejin.im/post/5b304f1f51882574c72f19b0)
-> - [带你走进webpack世界(READING)](https://juejin.im/post/5ac9dc9af265da23884d5543)
+> - [带你走进webpack世界](https://juejin.im/post/5ac9dc9af265da23884d5543)
 > - [Webpack 理解 Chunk](https://juejin.im/post/5d2b300de51d45775b419c76)
-> - [webpack build后生成的app、vendor、manifest三者有何职能不同？(TOREAD)](https://juejin.im/post/5c17b9805188251e663ec239)
+> - [webpack build后生成的app、vendor、manifest三者有何职能不同？](https://juejin.im/post/5c17b9805188251e663ec239)
 > - [[译]Webpack 4 — 神秘的SplitChunksc插件](https://juejin.im/post/5b45abde51882519ba0044d0)
 > - [webpack踩坑之路 (2)——图片的路径与打包](https://www.cnblogs.com/ghost-xyx/p/5812902.html)
+> - [webpack4.0+vue+es6配置](https://juejin.im/post/5c68f4e9e51d454be11473b9)
 
 ---
 
@@ -933,6 +934,39 @@ module.exports = {
 }
 
 ```
+
+## 九、Vue 环境相关开发配置
+
+万事俱备以后，就只剩下 Vue 相关的打包了，首先要先引入 vue、vue-router 等开发用到的包，以及 vue-style-loader vue-template-compiler 两个用于 webpack 解析 vue 文件的插件。
+
+```shell
+npm install vue vue-router vue-loader vue-style-loader vue-template-compiler --save-dev
+```
+
+随后配置 vue-loader
+
+```javascript
+// webpack.common.js
+const VueLoaderPlugin = require('vue-loader/lib/plugin')
+
+{
+    module: {
+        rules: [
+            {
+                test: /\.vue$/,
+                use: 'vue-loader'
+            }
+        ]
+    },
+    plugins: [
+        new VueLoaderPlugin()
+    ]
+}
+```
+
+由于我们使用了 MiniCssExtractPlugin 和 vue-loader，所以对于 css 的配置就没有额外添加了，插件会为我们自动识别并提取 vue 文件中的样式的。
+
+
 
 
 
