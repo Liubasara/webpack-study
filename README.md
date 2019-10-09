@@ -11,6 +11,7 @@
 > - [[译]Webpack 4 — 神秘的SplitChunksc插件](https://juejin.im/post/5b45abde51882519ba0044d0)
 > - [webpack踩坑之路 (2)——图片的路径与打包](https://www.cnblogs.com/ghost-xyx/p/5812902.html)
 > - [webpack4.0+vue+es6配置](https://juejin.im/post/5c68f4e9e51d454be11473b9)
+> - [webpack4.x下babel的安装、配置及使用](https://blog.csdn.net/u012443286/article/details/79577545)
 
 ---
 
@@ -966,9 +967,72 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
 由于我们使用了 MiniCssExtractPlugin 和 vue-loader，所以对于 css 的配置就没有额外添加了，插件会为我们自动识别并提取 vue 文件中的样式的。
 
+## 十、项目的额外优化
 
+至上一节为止，一个能够用于开发 Vue 项目的基于 webpack4 的脚手架就已经搭建完毕了，为了尽善尽美，我们接下来要做一些额外优化，以提升开发体验。
 
+### 10.1 babel -loader 配置
 
+对于时下的前端开发来说，不使用 ES6 语法无异于自断双臂，可是直至上一节，如果我们在项目中使用 ES6 语法，在执行  `npm run build`打包时都会报错（其实是由于我们使用了 WebpackParallelUglifyPlugin 插件进行了代码混淆导致的，如果不进行代码混淆就不会报错，但代码的兼容性还是得不到保障）。下面我们使用 babel 插件转译来解决这个问题。
+
+1. 首先是安装相关依赖，主要用到的依赖有以下几个：
+
+   - babel-loader：作为 webpack 的 loader 一种，用于被 webpack 识别并调用 babel 来转译被打包的 js 文件
+   - babel-core：babel-core 用于提供一系列的 api，当 webpack 使用 babel-loader 处理文件时，babel-loader实际上调用了 babel-core 的 api，因此也必须安装 babel-core。
+   - babel-preset-env：官方推荐的转码规则，babel 有好几种规则都可以实现对 ES6 语法的转化，如 babel-preset-es2015、babel-preset-latest、babel-preset-env。但目前官方推荐的是 babel-preset-env。
+   - plugin-transform-runtime：babel 的插件，表示不管浏览器是否支持ES6，只要是ES6的语法，都会进行转码成ES5
+
+   使用下面的命令进行 babel 安装：
+
+   ```shell
+   npm install @babel/core @babel/plugin-transform-runtime @babel/preset-env babel-loader --save-dev
+   ```
+
+2. 随后需要配置 babel 相关规则，相对简单的规则可以选择在 package.json 中添加 babel 关键字进行添加，如下：
+
+   ```json
+   // package.json
+   {
+       // ...
+       "babel": {
+           "presets": ["env"],
+           "plugins": ["@babel/plugin-transform-runtime"]
+       }
+   }
+   ```
+
+   presets 代表转码规则，plugin 属性用于设置使用到的插件，上面的配置会在打包时使用 babel，并告诉 babel 使用 bable-preset-env 规则和 plugin-transform-runtime 插件。
+
+   当然，为了尽量不污染依赖库的设置，babel 也提供了一种另外的方式，即在项目根目录下建立 .babelrc 文件进行设置。
+
+   ```json
+   // .babelrc
+   {
+     "presets": ["@babel/preset-env"], 
+     "plugins": ["@babel/plugin-transform-runtime"] 
+   }
+   ```
+
+3. 最后，在 webpack.common.js 中进行相关配置，将 js 文件使用 loader 进行转译即可(注意要使用 exclude 将库文件分开，以免影响效率)
+
+   ```javascript
+   // webpack.common.js
+   {
+       // ...
+       module: {
+           rules: [
+               // ...
+               {
+                   test: /\.js$/,
+                   loader: 'babel-loader',
+                   exclude: /node_modules/
+               }
+           ]
+       }
+   }
+   ```
+
+   完成配置以后运行`npm run build`，此时项目中即便使用了 ES6 语法，也能顺利完成打包并且不用过于担心兼容性了。
 
 
 

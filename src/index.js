@@ -9,11 +9,11 @@ Vue.use(Router)
 var router = new Router({
   routes: [{
     path: '/',
-    component: function () {return import('./views/HomePage.vue')}
+    component: () => import('./views/HomePage.vue')
   }]
 })
 
 new Vue({
   router: router,
-  render: function (h) { return h(App) }
+  render: h => h(App)
 }).$mount('#app')
