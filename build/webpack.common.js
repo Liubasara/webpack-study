@@ -7,10 +7,16 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin')
 const devMode = process.env.NODE_ENV !== 'production'
 
 module.exports = {
-  entry: path.resolve(__dirname, '../src'),
+  entry: path.resolve(__dirname, '../src/'),
   output: {
     path: path.resolve(__dirname, '../dist'), // 打包输出目录
     filename: 'js/[name].[hash:8].js'
+  },
+  resolve: {
+    extensions: ['.js', '.vue', '.scss', '.css'], //后缀名自动补全
+    alias: {
+      '@': path.resolve(__dirname, '../src') // 别名
+    }
   },
   module: {
     rules: [

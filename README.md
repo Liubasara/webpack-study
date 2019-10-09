@@ -1034,5 +1034,39 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin')
 
    完成配置以后运行`npm run build`，此时项目中即便使用了 ES6 语法，也能顺利完成打包并且不用过于担心兼容性了。
 
+### 10.2 小工具
 
+- 使用 ProgressBarPlugin 可以用一个进度条来表示 webpack 的打包进度
 
+  ```javascript
+  // npm install progress-bar-webpack-plugin --save-dev
+  // webpack.prod.js
+  const ProgressBarPlugin = require('progress-bar-webpack-plugin')
+  
+  {
+      plugins: [
+          new ProgressBarPlugin()
+      ]
+  }
+  ```
+
+  效果如下：
+
+  ![progressPlugin.png](./study-images/progressPlugin.png)
+
+- 使用 resolve、extensions 来进行路径简化
+
+  ```javascript
+  // webpack.common.js
+  {
+      // ...
+      resolve: {
+          extensions: [ '.js', '.vue', '.scss', '.css'], //后缀名自动补全
+          alias: {                                       
+              '@': path.resolve(__dirname, '../src'), //别名
+          }
+      }
+  }
+  ```
+
+至此，一个基于 Webpack4 的 Vue 开发项目已经搭建完成。

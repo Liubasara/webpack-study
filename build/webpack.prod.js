@@ -1,6 +1,7 @@
 const merge = require("webpack-merge")
 const common = require('./webpack.common.js')
 const WebpackParallelUglifyPlugin = require('webpack-parallel-uglify-plugin')
+const ProgressBarPlugin = require('progress-bar-webpack-plugin')
 const { CleanWebpackPlugin } = require('clean-webpack-plugin')
 
 module.exports = merge(common, {
@@ -52,6 +53,7 @@ module.exports = merge(common, {
           reduce_vars: true
         }
       }
-    })
+    }),
+    new ProgressBarPlugin()
   ]
 })
