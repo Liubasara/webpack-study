@@ -18,11 +18,18 @@ module.exports = {
       '@': path.resolve(__dirname, '../src') // 别名
     }
   },
+  resolveLoader: {
+    // 去哪些目录下寻找 Loader，从左至右执行，有先后顺序
+    modules: ['node_modules', './loader']
+  },
   module: {
     rules: [
       {
         test: /\.js$/,
-        loader: 'babel-loader',
+        use: [
+          'babel-loader',
+          'myLoader'
+        ],
         exclude: /node_modules/
       },
       {

@@ -12,6 +12,7 @@
 > - [webpack踩坑之路 (2)——图片的路径与打包](https://www.cnblogs.com/ghost-xyx/p/5812902.html)
 > - [webpack4.0+vue+es6配置](https://juejin.im/post/5c68f4e9e51d454be11473b9)
 > - [webpack4.x下babel的安装、配置及使用](https://blog.csdn.net/u012443286/article/details/79577545)
+> - [深入Webpack-编写Loader](https://segmentfault.com/a/1190000012718374)
 
 ---
 
@@ -1070,3 +1071,86 @@ const VueLoaderPlugin = require('vue-loader/lib/plugin')
   ```
 
 至此，一个基于 Webpack4 的 Vue 开发项目已经搭建完成。
+
+---
+
+第三部分 Webpack进阶
+
+---
+
+要深入学习 Webpack，就绕不过种类繁多的 Loader 和 Plugin，这两种机制作为第三方插件为 Webpack 打包提供了更多的可能性。所以在这部分，我们来掌握 Loader 和 Plugin 的写法。
+
+## 十一、编写 Loader
+
+Loader 用于将源文件经过转化后输出新的结果，且一个文件还可以链式的经过多个 Loader 进行翻译。
+
+由于 Webpack 是运行在 Node.js 之上的，一个 Loader 其实就是一个 Node.js 模块，这个模块需要导出一个函数，其工作就是获得处理前的原内容，对原内容执行处理后，返回处理后的内容。
+
+在进行 loader 的编写时，要注意遵循单一职责原则，通俗来讲就是只做一种转换，由于 Loader 是支持链式调用的，遵循单一职责原则，只关心输入和输出可以让整体逻辑显得更加清晰。
+
+### 11.1 Loader 基础以及使用
+
+一个最简单的 Loader 源码如下：
+
+```javascript
+// loader/myLoader.js
+module.exports = function (source) {
+    // source 为 compiler 传递给 Loader 的一个文件的原内容
+    // 该函数需要返回处理后的内容
+    console.log('这是我的第一个 Loader')
+    return source
+}
+```
+
+随后可以使用三种方式将 loader 配置进 webpack 的配置文件：
+
+1. 直接在 rules 中通过 loader 选项 require 绝对目录
+
+   ```javascript
+   // webpack.common.js
+   {
+       module: {
+           rules: [
+               {
+                   test: /\.js$/,
+                   use:[
+                       'babel-loader',
+                       {
+                           // 通过 require.resolve 获取绝对路径
+                           loader: require.resolve('../loader/myLoader')
+                       }
+                   ]
+               }
+           ]
+       }
+   }
+   ```
+
+2. 通过 ResolveLoader 配置，规定 Webpack 会从哪几个文件夹下寻找 Loader
+
+   ```javascript
+   // webpack.common.js
+   {
+       resolveLoader: {
+           // 去哪些目录下寻找 Loader，从左至右执行，有先后顺序
+           modules: ['node_modules', '../loader/']
+       },
+       module: {
+           rules: [
+               {
+                   test: /\.js$/,
+                   use: ['babel-loader', 'myLoader']
+               }
+           ]
+       }
+   }
+   ```
+
+   
+
+3. 通过`npm link`命令将本地 loader 注册到 node_modules 目录下，让项目可以直接使用
+
+配置完毕后，执行打包命令，就可以看到 loader 已经在打包过程中应用了。
+
+![loadersPackage1.jpg](./study-images/loadersPackage1.jpg)
+
