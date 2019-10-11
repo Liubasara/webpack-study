@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const VueLoaderPlugin = require('vue-loader/lib/plugin')
+const MyPlugin = require('../plugin/myPlugin')
 
 const devMode = process.env.NODE_ENV !== 'production'
 
@@ -27,8 +28,7 @@ module.exports = {
       {
         test: /\.js$/,
         use: [
-          'babel-loader',
-          'myLoader'
+          'babel-loader'
         ],
         exclude: /node_modules/
       },
@@ -86,6 +86,7 @@ module.exports = {
       from: path.resolve(__dirname, '../public'),
       to: path.resolve(__dirname, '../dist/static'),
       ignore: ['.*']
-    }])
+    }]),
+    new MyPlugin()
   ]
 }

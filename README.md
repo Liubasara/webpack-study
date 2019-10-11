@@ -13,6 +13,8 @@
 > - [webpack4.0+vue+es6配置](https://juejin.im/post/5c68f4e9e51d454be11473b9)
 > - [webpack4.x下babel的安装、配置及使用](https://blog.csdn.net/u012443286/article/details/79577545)
 > - [深入Webpack-编写Loader](https://segmentfault.com/a/1190000012718374)
+> - [webpack loader和plugin编写](https://juejin.im/post/5bbf190de51d450ea52fffd3)
+> - [webpack自定义插件](https://zxljack.com/2019/03/webpack-plugin/)
 
 ---
 
@@ -1287,17 +1289,52 @@ module.exports = function(source) {
 > <li>
 >     <code>this.emitFile</code>：输出一个文件，使用方法为 <code>emitFile(name: string, content: Buffer|string, sourceMap: {...})</code>。</li></ul>
 
+## 十二、编写 Plugin
 
+在 Webpack 中，Plugin 与 Loader 的区别主要在于 Loader 承担的是一个翻译员的工作，操作对象是每一个类型的文件，而相对应的，Plugin 则是一个扩展器，操作 webpack 本身，并且可以对整个流程进行控制。
 
+Plugin 并不直接操作文件，而是基于事件机制，监听 webpack 打包过程中被抛出的节点，执行任务。
 
+### 12.1 Plugin 示例
 
+一个最简单的插件如下所示：
 
+```javascript
+class MyPlugin {
+  constructor (options) {
+    console.log('plugin constructor:', options)
+  }
+  apply (compiler) {
+    // 绑定钩子事件
+    compiler.plugin('compilation', compilation => {
+      console.log('MyPlugin')
+      compilation.plugin('buildModule', m => {
+        console.log('buildModule')
+      })
+    })
+  }
+}
 
+module.exports = MyPlugin
+```
 
+### 12.1 Plugin 涉及概念
 
+上面的代码中涉及三个重要的概念：
 
+- compiler
 
+  compiler 对象包含了 Webpack 环境中所有的配置信息，可以将其理解为 Webpack 的实例，在一次构建的过程中只会生成一次，**用以监听整个 Webpack 从启动到关闭的生命周期事件**。
 
+- compilation
+
+  compilation 对象包含了当前打包模块的资源，编译生成资源、变化的文件等等。compiler 负责编译webpack 配置对象并返回一个 compilation 实例，而 compilation 实例执行时，会创建所需的 bundles。**用以监听每个模块编译打包时的生命周期事件**。
+
+- 钩子节点
+
+  无论是 compiler 还是 compilation 都提供了若干的生命周期节点钩子供用户调用，控制整个打包流程中的各个进程。compiler 的声明周期可点击[这里](https://www.webpackjs.com/api/compiler-hooks/)，compilation 的声明点击[这里](https://www.webpackjs.com/api/compilation-hooks/)查看。
+
+此外需要注意的是，compiler 和 compilation 这两个对象都是引用，不要在插件中直接修改这两个对象，会影响后面的插件。
 
 
 
