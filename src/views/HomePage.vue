@@ -7,10 +7,13 @@
 <script>
 export default {
   name: 'HomePage',
-  data: function () {
+  data () {
     return {
       message: 'Vue App Template | HomePage'
     }
+  },
+  mounted () {
+    alert('check')
   }
 }
 </script>

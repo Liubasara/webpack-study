@@ -1,1 +1,0 @@
-(window.webpackJsonp=window.webpackJsonp||[]).push([[0],{10:function(e,t,n){"use strict";n.r(t);var s=n(3),a=Object(s.a)({name:"HomePage",data:function(){return{message:"Vue App Template | HomePage"}}},(function(){var e=this.$createElement;return(this._self._c||e)("div",[this._v("\n  "+this._s(this.message)+"\n")])}),[],!1,null,"40f1bb04",null);t.default=a.exports}}]);

@@ -1154,3 +1154,152 @@ module.exports = function (source) {
 
 ![loadersPackage1.jpg](./study-images/loadersPackage1.jpg)
 
+### 11.2 Loader API 功能
+
+#### 11.2.1 获得 Loader 的 options
+
+Webpack 提供了一些 API 以供 loader 调用，可以通过引入 loader-utils 来获取。
+
+```javascript
+// myLoader.js
+const loaderUtils = require('loader-utils')
+
+module.exports = function (source) {
+  // source 为 compiler 传递给 Loader 的一个文件的原内容
+  // 该函数需要返回处理后的内容
+  const options = loaderUtils.getOptions(this)
+  console.log(options)
+  return source
+}
+```
+
+#### 11.2.2 返回其它结果
+
+一般的 loader 只是会返回原内容转换后的内容，但在有些场景下还需要返回除了内容之外的东西。
+
+例如 babel-loader 转换 ES6 ，就还需要输出转换后的 ES5 代码对应的 Source Map用于调试源码，这时候就不能通过 return 简单的进行返回了。
+
+webpack 为这种情况设计了一个 callback 函数API，方便 loader 和 Webpack 之间通信，使用方法如下：
+
+```javascript
+this.callback(
+    // 当无法转换原内容时，给 Webpack 返回一个 Error
+    err: Error | null,
+    // 原内容转换后的内容
+    content: string | Buffer,
+    // 用于把转换后的内容得出原内容的 Source Map，方便调试
+    sourceMap?: SourceMap,
+    // 如果本次转换为原内容生成了 AST 语法树，可以把这个 AST 返回，
+    // 以方便之后需要 AST 的 Loader 复用该 AST，以避免重复生成 AST，提升性能
+    abstractSyntaxTree?: AST
+)
+```
+
+此外，若当前 loader 需要使用 callback 函数，当前 loader 必须要 return 一个`undefined`以告诉 webpack 当前 loader 返回的结果在 callback 中而不在 return 中。
+
+```javascript
+module.exports = function(source) {
+  // 通过 this.callback 告诉 Webpack 返回的结果
+  this.callback(null, source, sourceMaps)
+  // 当你使用 this.callback 返回内容时，该 Loader 必须返回 undefined，
+  // 以让 Webpack 知道该 Loader 返回的结果在 this.callback 中，而不是 return 中 
+  return
+}
+```
+
+> PS： Source Map 的生成很耗时，通常在开发环境下才会生成 Source Map，其它环境下不用生成，以加速构建。
+> 为此 Webpack 为 Loader 提供了 `this.sourceMap` API 去告诉 Loader 当前构建环境下用户是否需要 Source Map。
+> 如果你编写的 Loader 会生成 Source Map，请考虑到这点。
+
+#### 11.2.3 同步与异步
+
+Loader 有同步和异步的区分，有些转换流程复杂的 Loader 需要一些异步步骤来进行转换（例如网络请求），如果采用同步的方式就会阻塞整个构建，拖慢打包进度。
+
+所以 webpack 提供了一个 async 接口用于异步构建，使用方式如下：
+
+```javascript
+module.exports = function (source) {
+  // 告诉 Webpack 本次转换是异步的，Loader 会在 callback 中回调结果
+  let callback = this.async()
+  setTimeout(() => {
+    console.log('延时两秒')
+    // 通过 callback 返回异步执行后的结果，可传入四个参数, err、result、sourceMaps、ast
+    callback(null, source)
+  }, 2000)
+}
+```
+
+#### 11.2.4 处理二进制数据
+
+默认情况下，Webpack 传给 Loader 的是 UTF-8 格式编码的字符串，但有些场景下 Loader 需要处理二进制文件而不是文本（例如 file-loader），这时可以通过修改 loader 的 raw 属性来进行传入数据的类型变更。
+
+```javascript
+function myLoader (source) {
+  // 在 exports.raw === true 时，Webpack 传给 Loader 的 source 是 Buffer 类型的
+  console.log(source instanceof Buffer)
+  // Loader 返回的类型也可以是 Buffer 类型的
+  // 在 exports.raw !== true 时，Loader 也可以返回 Buffer 类型的结果
+  return source
+}
+
+// 通过 exports.raw 属性告诉 Webpack 该 Loader 是否需要二进制数据
+myLoader.raw = true
+
+module.exports = myLoader
+```
+
+#### 11.2.5 缓存加速
+
+Webpack 会默认缓存所有 Loader 的处理结果，也就是说在需要被打包的文件及其依赖文件没有发生变化时是不会重新调用对应的 Loader 去执行转换操作的。
+
+如果想取消这一默认缓存行为，可以调用 cacheable API 来进行。
+
+```javascript
+module.exports = function(source) {
+  // 关闭该 Loader 的缓存功能
+  this.cacheable(false);
+  return source;
+};
+```
+
+#### 11.2.6 其余常用 API
+
+> <ul>
+> <li>
+> <code>this.context</code>：当前处理文件的所在目录，假如当前 Loader 处理的文件是 <code>/src/main.js</code>，则 <code>this.context</code> 就等于 <code>/src</code>。</li>
+> <li>
+> <code>this.resource</code>：当前处理文件的完整请求路径，包括 querystring，例如 <code>/src/main.js?name=1</code>。</li>
+> <li>
+> <code>this.resourcePath</code>：当前处理文件的路径，例如 <code>/src/main.js</code>。</li>
+> <li>
+> <code>this.resourceQuery</code>：当前处理文件的 querystring。</li>
+> <li>
+> <code>this.target</code>：等于 Webpack 配置中的 Target，详情见 <a href="http://webpack.wuhaolin.cn/2%E9%85%8D%E7%BD%AE/2-7%E5%85%B6%E5%AE%83%E9%85%8D%E7%BD%AE%E9%A1%B9.html" rel="nofollow noreferrer" target="_blank">2-7其它配置项-Target</a>。</li>
+> <li>
+> <code>this.loadModule</code>：但 Loader 在处理一个文件时，如果依赖其它文件的处理结果才能得出当前文件的结果时，就可以通过 <code>this.loadModule(request: string, callback: function(err, source, sourceMap, module))</code> 去获得 <code>request</code> 对应文件的处理结果。</li><li>
+> <code>this.resolve</code>：像 <code>require</code> 语句一样获得指定文件的完整路径，使用方法为 <code>resolve(context: string, request: string, callback: function(err, result: string))</code>。</li>
+> <li>
+> <code>this.addDependency</code>：给当前处理文件添加其依赖的文件，以便再其依赖的文件发生变化时，会重新调用 Loader 处理该文件。使用方法为 <code>addDependency(file: string)</code>。</li>
+> <li>
+> <code>this.addContextDependency</code>：和 <code>addDependency</code> 类似，但 <code>addContextDependency</code> 是把整个目录加入到当前正在处理文件的依赖中。使用方法为 <code>addContextDependency(directory: string)</code>。</li>
+> <li>
+> <code>this.clearDependencies</code>：清除当前正在处理文件的所有依赖，使用方法为 <code>clearDependencies()</code>。</li>
+> <li>
+>     <code>this.emitFile</code>：输出一个文件，使用方法为 <code>emitFile(name: string, content: Buffer|string, sourceMap: {...})</code>。</li></ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
