@@ -1305,12 +1305,16 @@ class MyPlugin {
     console.log('plugin constructor:', options)
   }
   apply (compiler) {
-    // 绑定钩子事件
+    // 绑定钩子事件(webpack 3 写法)
     compiler.plugin('compilation', compilation => {
       console.log('MyPlugin')
       compilation.plugin('buildModule', m => {
         console.log('buildModule')
       })
+    })
+    // 绑定钩子事件(webpack 4 写法)
+    compiler.hooks.compilation.tap('MyPlugin', compilation => {
+      // dosomething
     })
   }
 }
@@ -1332,11 +1336,57 @@ module.exports = MyPlugin
 
 - 钩子节点
 
-  无论是 compiler 还是 compilation 都提供了若干的生命周期节点钩子供用户调用，控制整个打包流程中的各个进程。compiler 的声明周期可点击[这里](https://www.webpackjs.com/api/compiler-hooks/)，compilation 的声明点击[这里](https://www.webpackjs.com/api/compilation-hooks/)查看。
+  无论是 compiler 还是 compilation 都提供了若干的生命周期节点钩子供用户调用，控制整个打包流程中的各个进程。compiler 的生命周期可点击[这里](https://www.webpackjs.com/api/compiler-hooks/)，compilation 的生命点击[这里](https://www.webpackjs.com/api/compilation-hooks/)查看。
 
 此外需要注意的是，compiler 和 compilation 这两个对象都是引用，不要在插件中直接修改这两个对象，会影响后面的插件。
 
+### 12.1 Plugin 执行流程
 
+1. Webpack 在启动后，生成 Webpack 的实例，称作 compiler
+2. 随后 Webpack 在读取配置的过程中会执行`new MyPligin(options)`，初始化一个插件的实例
+3. 随后调用插件实例的 apply 方法，将实例化的 Webpack ，也就是 compiler 传入。
+4. 插件实例在获得 compiler 后就可以通过`compiler.plugin(events, callback)`来进行 Webpack 广播事件的监听。
+
+Webpack 的事件机制应用了观察者模式，类似于 Node 里面的 EventEmitter，你也可以使用 [Tapable](https://webpack.docschina.org/api/plugins/#%E8%87%AA%E5%AE%9A%E4%B9%89%E7%9A%84%E9%92%A9%E5%AD%90%E5%87%BD%E6%95%B0-custom-hooks-) 来自定义钩子函数。
+
+### 12.2 手写一个骨架屏插件 Demo
+
+所谓骨架屏，就是在 JS 渲染页面之前呈现的静态内容，像 Vue 这类单页渲染的 JS 库一般都是选择一个页面上的根节点，使用 JS 进行页面的渲染。
+
+以下这个插件用于在打包的时候，修改 index.html 的内容，达到骨架屏的效果。
+
+由于我们的 html 是使用 [html-webpack-plugin](https://github.com/jantimon/html-webpack-plugin) 来打包的，所以我们需要依赖其输出的结果，通过查看其官网，我们可以使用 afterTemplateExecution 事件触发我们的钩子函数，达到内容修改的目的。
+
+代码如下所示。
+
+```javascript
+class MyPlugin {
+  constructor (options) {
+    this.options = options
+  }
+
+  injectSkeletonScreen (htmlData, callback) {
+    htmlData.html = htmlData.html.replace(
+      `<div id="app"></div>`,
+       // 在这里输入骨架屏的内容
+      `<div id="app">SkeletonScreen</div>`
+    )
+    callback(null, htmlData)
+  }
+
+  apply (compiler) {
+    // 绑定钩子事件
+    compiler.hooks.compilation.tap('MyPlugin', compilation => {
+      const HtmlWebpackPlugin = require('html-webpack-plugin')
+      HtmlWebpackPlugin.getHooks(compilation).afterTemplateExecution.tapAsync('MyPlugin', (htmlData, callback) => {
+        this.injectSkeletonScreen(htmlData, callback)
+      })
+    })
+  }
+}
+
+module.exports = MyPlugin
+```
 
 
 

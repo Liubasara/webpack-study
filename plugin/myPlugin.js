@@ -1,13 +1,22 @@
 class MyPlugin {
   constructor (options) {
-    console.log('plugin constructor:', options)
+    this.options = options
   }
+
+  injectSkeletonScreen (htmlData, callback) {
+    htmlData.html = htmlData.html.replace(
+      `<div id="app"></div>`,
+      `<div id="app">SkeletonScreen</div>`
+    )
+    callback(null, htmlData)
+  }
+
   apply (compiler) {
     // 绑定钩子事件
-    compiler.plugin('compilation', compilation => {
-      console.log('MyPlugin')
-      compilation.plugin('buildModule', m => {
-        console.log('buildModule', m)
+    compiler.hooks.compilation.tap('MyPlugin', compilation => {
+      const HtmlWebpackPlugin = require('html-webpack-plugin')
+      HtmlWebpackPlugin.getHooks(compilation).afterTemplateExecution.tapAsync('MyPlugin', (htmlData, callback) => {
+        this.injectSkeletonScreen(htmlData, callback)
       })
     })
   }
