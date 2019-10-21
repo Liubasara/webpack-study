@@ -2,6 +2,8 @@
 
 > 推荐资料：
 >
+> - [gulp和webpack究竟有什么区别？](https://segmentfault.com/q/1010000008058766)
+> - [Gulp和Webpack的基本区别](https://www.qingtingip.com/h_199804.html)
 > - [Webpack中文文档](https://webpack.docschina.org/concepts/)
 > - [Webpack从入门到上线](https://www.cnblogs.com/yincheng/p/webpack.html)
 > - [Webpack 4 配置最佳实践](https://juejin.im/post/5b304f1f51882574c72f19b0)
